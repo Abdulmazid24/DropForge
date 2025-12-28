@@ -321,7 +321,7 @@ This project is licensed under the **MIT License**.
 
 **Abdul Mazid**
 - GitHub: [@Abdulmazid24](https://github.com/Abdulmazid24)
-- Portfolio: [Your Portfolio Link]
+- Portfolio: [abdulmazid-portfolio.vercel.app](https://abdulmazid-portfolio.vercel.app/)
 
 ---
 
