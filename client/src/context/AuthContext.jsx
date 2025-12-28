@@ -18,13 +18,15 @@ export const AuthProvider = ({ children }) => {
                 // for now just decode or assume valid if simple
                 // Better: Fetch Profile
                 try {
-                    const { data } = await axios.get('/api/users/profile', {
+                    const { data } = await axios.get('/api/users/me', {
                         headers: { Authorization: `Bearer ${token}` }
                     });
-                    setUser({ ...data, token });
+                    setUser(data);
                 } catch (error) {
-                    console.log('Auth check failed', error);
+                    console.error('Auth Check Failed:', error);
                     localStorage.removeItem('token');
+                } finally {
+                    setLoading(false);
                 }
             }
             setLoading(false);

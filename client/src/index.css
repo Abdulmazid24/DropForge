@@ -1,11 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui";
 
-@layer base {
-    body {
-        @apply bg-dark-bg text-gray-100 font-sans antialiased overflow-x-hidden;
-    }
+@theme {
+    --font-sans: "Outfit", sans-serif;
+    --font-body: "Inter", sans-serif;
+
+    --color-primary: #0F172A;
+    --color-secondary: #1E293B;
+    --color-accent: #38BDF8;
+    --color-accent-purple: #818CF8;
+    --color-dark-bg: #020617;
+    --color-glass-white: rgba(255, 255, 255, 0.05);
+    --color-glass-border: rgba(255, 255, 255, 0.1);
+
+    --image-hero-glow: conic-gradient(from 180deg at 50% 50%, #0F172A 0deg, #1E293B 180deg, #0F172A 360deg);
 }
 
 @layer utilities {
@@ -19,6 +27,12 @@
 
     .text-glow {
         text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+}
+
+@layer base {
+    body {
+        @apply bg-dark-bg text-gray-100 font-sans antialiased overflow-x-hidden;
     }
 
     /* Custom Scrollbar */

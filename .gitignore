@@ -33,3 +33,4 @@ yarn-error.log*
 *.sln
 *.sw?
 IMPLEMENTATION_DOCS.md
+TEST_CREDENTIALS.md

@@ -3,6 +3,7 @@ import {
     TrendingUp,
     Package,
     ShoppingCart,
+    ShoppingBag,
     DollarSign
 } from 'lucide-react';
 import {

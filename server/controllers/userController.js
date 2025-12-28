@@ -89,28 +89,35 @@ const getUsers = async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateProfile = async (req, res) => {
-    const user = await User.findById(req.user._id)
+    try {
+        const user = await User.findById(req.user._id)
 
-    if (user) {
-        user.name = req.body.name || user.name
-        user.phone = req.body.phone || user.phone
+        if (user) {
+            user.name = req.body.name || user.name
+            user.phone = req.body.phone || user.phone
 
-        if (req.body.password) {
-            user.password = req.body.password
+            if (req.body.password) {
+                user.passwordHash = req.body.password
+            }
+
+            console.log('Saving user:', user._id);
+            const updatedUser = await user.save()
+            console.log('User saved successfully');
+
+            res.json({
+                _id: updatedUser.id,
+                name: updatedUser.name,
+                phone: updatedUser.phone,
+                role: updatedUser.role,
+                token: generateToken(updatedUser._id),
+            })
+        } else {
+            res.status(404)
+            throw new Error('User not found')
         }
-
-        const updatedUser = await user.save()
-
-        res.json({
-            _id: updatedUser.id,
-            name: updatedUser.name,
-            phone: updatedUser.phone,
-            role: updatedUser.role,
-            token: generateToken(updatedUser._id),
-        })
-    } else {
-        res.status(404)
-        throw new Error('User not found')
+    } catch (error) {
+        console.error('Update Profile Error:', error);
+        res.status(500).json({ message: error.message, stack: error.stack });
     }
 }
 
