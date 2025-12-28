@@ -71,14 +71,53 @@ const loginUser = async (req, res) => {
 };
 
 // @desc    Get user data
-// @route   GET /api/users/profile
+// @route   GET /api/users/me
 // @access  Private
 const getMe = async (req, res) => {
-    res.status(200).json(req.user);
-};
+    res.status(200).json(req.user)
+}
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+const getUsers = async (req, res) => {
+    const users = await User.find({})
+    res.json(users)
+}
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateProfile = async (req, res) => {
+    const user = await User.findById(req.user._id)
+
+    if (user) {
+        user.name = req.body.name || user.name
+        user.phone = req.body.phone || user.phone
+
+        if (req.body.password) {
+            user.password = req.body.password
+        }
+
+        const updatedUser = await user.save()
+
+        res.json({
+            _id: updatedUser.id,
+            name: updatedUser.name,
+            phone: updatedUser.phone,
+            role: updatedUser.role,
+            token: generateToken(updatedUser._id),
+        })
+    } else {
+        res.status(404)
+        throw new Error('User not found')
+    }
+}
 
 module.exports = {
     registerUser,
     loginUser,
     getMe,
+    getUsers,
+    updateProfile,
 };

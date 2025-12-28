@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Eye, MoreHorizontal, Truck, CheckCircle, Clock } from 'lucide-react';
+import { Search, Filter, Eye, MoreHorizontal, Truck, CheckCircle, Clock, Package } from 'lucide-react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import Modal from '../../components/ui/Modal';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Details Modal
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleViewOrder = (order) => {
+        setSelectedOrder(order);
+        setIsModalOpen(true);
+    };
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -102,7 +112,10 @@ const Orders = () => {
                                     <td className="p-4">{getStatusBadge(order.status)}</td>
                                     <td className="p-4 font-mono font-bold text-emerald-400">৳{order.profit}</td>
                                     <td className="p-4 text-right">
-                                        <button className="p-2 hover:bg-slate-700 rounded-lg text-gray-400 hover:text-white transition-colors">
+                                        <button
+                                            onClick={() => handleViewOrder(order)}
+                                            className="p-2 hover:bg-slate-700 rounded-lg text-gray-400 hover:text-white transition-colors"
+                                        >
                                             <Eye className="w-5 h-5" />
                                         </button>
                                     </td>
@@ -118,6 +131,50 @@ const Orders = () => {
                     </div>
                 )}
             </div>
+
+            {/* Order Details Modal */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={`Order Details: ${selectedOrder?.localOrderId}`}
+            >
+                {selectedOrder && (
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="p-4 bg-slate-800 rounded-xl">
+                                <h4 className="text-gray-400 mb-2">Customer</h4>
+                                <p className="font-bold text-white text-lg">{selectedOrder.customerInfo?.name}</p>
+                                <p className="text-gray-400">{selectedOrder.customerInfo?.phone}</p>
+                                <p className="text-gray-400 mt-1">{selectedOrder.customerInfo?.address}, {selectedOrder.customerInfo?.city}</p>
+                            </div>
+                            <div className="p-4 bg-slate-800 rounded-xl">
+                                <h4 className="text-gray-400 mb-2">Order Info</h4>
+                                <p className="flex justify-between"><span>Status:</span> <span className="font-bold text-accent">{selectedOrder.status}</span></p>
+                                <p className="flex justify-between mt-1"><span>Profit:</span> <span className="font-bold text-emerald-400">৳{selectedOrder.profit}</span></p>
+                                <p className="flex justify-between mt-1"><span>Date:</span> <span>{new Date(selectedOrder.createdAt).toLocaleDateString()}</span></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="font-bold mb-3 border-b border-gray-700 pb-2">Items</h4>
+                            {selectedOrder.orderItems?.map((item, i) => (
+                                <div key={i} className="flex justify-between items-center py-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+                                            <Package className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <div>
+                                            {/* Product link or name - assuming item.product is populated or we have title */}
+                                            <p className="font-medium">Product ID: {item.product}</p>
+                                            <p className="text-xs text-gray-500">Qty: {item.qty}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };
