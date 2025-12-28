@@ -1,0 +1,84 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
+};
+
+// @desc    Register new user
+// @route   POST /api/users
+// @access  Public
+const registerUser = async (req, res) => {
+    const { name, phone, password } = req.body;
+
+    if (!name || !phone || !password) {
+        return res.status(400).json({ message: 'Please add all fields' });
+    }
+
+    // Check if user exists
+    const userExists = await User.findOne({ phone });
+
+    if (userExists) {
+        return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Create user
+    // Note: password hashing is handled in User model pre-save hook
+    // We map 'password' input to 'passwordHash' schema field
+    const user = await User.create({
+        name,
+        phone,
+        passwordHash: password,
+    });
+
+    if (user) {
+        res.status(201).json({
+            _id: user.id,
+            name: user.name,
+            phone: user.phone,
+            role: user.role,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(400).json({ message: 'Invalid user data' });
+    }
+};
+
+// @desc    Authenticate a user
+// @route   POST /api/users/login
+// @access  Public
+const loginUser = async (req, res) => {
+    const { phone, password } = req.body;
+
+    // Check for user phone
+    const user = await User.findOne({ phone });
+
+    if (user && (await user.matchPassword(password))) {
+        res.json({
+            _id: user.id,
+            name: user.name,
+            phone: user.phone,
+            role: user.role,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(400).json({ message: 'Invalid credentials' });
+    }
+};
+
+// @desc    Get user data
+// @route   GET /api/users/profile
+// @access  Private
+const getMe = async (req, res) => {
+    res.status(200).json(req.user);
+};
+
+module.exports = {
+    registerUser,
+    loginUser,
+    getMe,
+};

@@ -6,23 +6,32 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const initCronJobs = require('./jobs/cron');
+
 // Middleware
 app.use(express.json());
 app.use(cors());
 
 // Routes
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/supplier', require('./routes/supplierRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+
 app.get('/', (req, res) => {
     res.send('DropForge API is running...');
 });
 
+// Initialize Cron Jobs
+initCronJobs();
+
 // Database Connection
 const connectDB = async () => {
     try {
-        // TODO: Add MONGO_URI to .env
-        // await mongoose.connect(process.env.MONGO_URI);
-        console.log('MongoDB Connected (Placeholder)');
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (err) {
-        console.error(err.message);
+        console.error(`Error: ${err.message}`);
         process.exit(1);
     }
 };
