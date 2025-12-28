@@ -3,19 +3,27 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Package } from 'lucide-react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import Modal from '../../components/ui/Modal';
 
 const Products = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Order Modal State
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [orderForm, setOrderForm] = useState({
+        customerName: '',
+        customerPhone: '',
+        address: '',
+        city: '',
+        quantity: 1
+    });
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                // Using the public products route or supplier route?
-                // Ideally admin sees all products.
-                // Assuming /api/products is available (public) or admin protected route.
-                // We created /api/products explicitly for this in previous steps.
                 const { data } = await api.get('/products');
                 setProducts(data);
             } catch (error) {
@@ -26,6 +34,34 @@ const Products = () => {
         };
         fetchProducts();
     }, []);
+
+    const handleOrderClick = (product) => {
+        setSelectedProduct(product);
+        setIsModalOpen(true);
+    };
+
+    const handleOrderSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                orderItems: [{ product: selectedProduct._id, qty: parseInt(orderForm.quantity) }],
+                shippingAddress: {
+                    name: orderForm.customerName,
+                    phone: orderForm.customerPhone,
+                    address: orderForm.address,
+                    city: orderForm.city
+                },
+                paymentMethod: 'COD'
+            };
+
+            await api.post('/orders', payload);
+            toast.success('Order placed successfully!');
+            setIsModalOpen(false);
+            setOrderForm({ customerName: '', customerPhone: '', address: '', city: '', quantity: 1 });
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to place order');
+        }
+    };
 
     const filteredProducts = products.filter(product =>
         product.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -101,7 +137,12 @@ const Products = () => {
                             </div>
                             <div className="mt-4 pt-4 border-t border-slate-700/50 flex gap-2">
                                 <button className="flex-1 py-2 bg-slate-800 rounded-lg text-sm hover:bg-slate-700 transition-colors">Edit</button>
-                                <button className="flex-1 py-2 bg-accent/20 text-accent rounded-lg text-sm hover:bg-accent/30 transition-colors">Add Order</button>
+                                <button
+                                    onClick={() => handleOrderClick(product)}
+                                    className="flex-1 py-2 bg-accent/20 text-accent rounded-lg text-sm hover:bg-accent/30 transition-colors"
+                                >
+                                    Add Order
+                                </button>
                             </div>
                         </div>
                     </motion.div>
@@ -113,6 +154,85 @@ const Products = () => {
                     <p className="text-xl">No products found.</p>
                 </div>
             )}
+
+            {/* Order Modal */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={`Order: ${selectedProduct?.title}`}
+            >
+                <form onSubmit={handleOrderSubmit} className="space-y-4">
+                    <div>
+                        <label className="text-sm text-gray-400">Customer Name</label>
+                        <input
+                            required
+                            type="text"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 focus:border-accent"
+                            value={orderForm.customerName}
+                            onChange={e => setOrderForm({ ...orderForm, customerName: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-400">Phone</label>
+                        <input
+                            required
+                            type="text"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 focus:border-accent"
+                            value={orderForm.customerPhone}
+                            onChange={e => setOrderForm({ ...orderForm, customerPhone: e.target.value })}
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-sm text-gray-400">City</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 focus:border-accent"
+                                value={orderForm.city}
+                                onChange={e => setOrderForm({ ...orderForm, city: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-400">Quantity</label>
+                            <input
+                                required
+                                type="number"
+                                min="1"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 focus:border-accent"
+                                value={orderForm.quantity}
+                                onChange={e => setOrderForm({ ...orderForm, quantity: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-400">Detailed Address</label>
+                        <textarea
+                            required
+                            rows="2"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 focus:border-accent"
+                            value={orderForm.address}
+                            onChange={e => setOrderForm({ ...orderForm, address: e.target.value })}
+                        ></textarea>
+                    </div>
+
+                    <div className="pt-4 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(false)}
+                            className="flex-1 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex-1 py-3 bg-accent text-dark-bg font-bold rounded-xl hover:bg-accent/90 transition"
+                        >
+                            Confirm Order
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
